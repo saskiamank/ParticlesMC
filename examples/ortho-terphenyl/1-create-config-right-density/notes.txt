@@ -1,0 +1,9 @@
+changes: 
+timesteps in 2-equili.../1.0/params.toml 
+timesteps in 3-run-production/1.0/params.toml 
+
+in 3-run-production/1.0/params.toml: config = "../../2-equilibrate-at-different-temperatures/1.0/chains/1/lastframe.xyz" chains instead of trajectories
+
+Where exactly is the data from the paper for the figure for comparison? 
+
+.toml file comments: also # 

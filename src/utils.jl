@@ -9,6 +9,7 @@ function Arianna.delta_log_target_density(e1, e2, system::Particles)
     return -(e2 - e1) ./ system.temperature
 end
 
+# fld(a,b) returns the largest integer less than or equal to x devided by y
 fold_back(x, box) = x .- fld.(x, box) .* box
 
 

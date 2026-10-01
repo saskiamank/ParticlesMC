@@ -1,5 +1,7 @@
 using LinearAlgebra, StaticArrays
 
+
+#region Abstract types
 """
     abstract type Model end
 
@@ -21,6 +23,9 @@ abstract type DiscreteModel <: Model end
 An abstract base type representing a general interaction model with a continuous size polidispersity.
 """
 abstract type ContinuousModel <: Model end
+#endregion 
+
+
 
 ## POTENTIALS
 harmonic_spheres(r2, ϵ, σ2) = ϵ * (1 - r2 / σ2)
@@ -30,12 +35,13 @@ inverse_power(r2, ϵ, σ2, ndiv2) = ϵ * (σ2 / r2)^(ndiv2)
 @inline function lennard_jones(r2::T, ϵ4::T, σ2::T) where T<:AbstractFloat
     x = σ2 * inv(r2)
     x3 = x * x * x  # (σ²/r²)^3
-    return ϵ4 * (x3 * x3 - x3)
+    return ϵ4 * (x3 * x3 - x3)  # ϵ4 * ( (σ²/r²)^6  - (σ²/r²)^3 ) 
 end
 
 fene(r2, kr02, r02) = kr02 * log(1 - r2 * inv(r02))
 
 ###############################################################################
+#region SoftSpheres
 """
     struct SoftSpheres{T<:AbstractArray} <: DiscreteModel
 
@@ -83,6 +89,7 @@ function BHHP()
     return [LJ_11 LJ_12; LJ_21 LJ_22]
 end
 
+#endregion
 ###############################################################################
 """
     struct LennardJones{T<:AbstractArray} <: DiscreteModel
@@ -228,7 +235,7 @@ end
 cutoff(model::DiscreteModel) = model.rcut
 cutoff2(model::DiscreteModel) = model.rcut2
 
-function Trimer()
+function Trimer() 
     ϵ = SMatrix{3,3,Float64}([1.0 1.0 1.0; 1.0 1.0 1.0; 1.0 1.0 1.0])
     σ = SMatrix{3,3,Float64}([0.9 0.95 1.0; 0.95 1.0 1.05; 1.0 1.05 1.1])
     k = SMatrix{3,3,Float64}([0.0 33.241 30.0; 33.241 0.0 27.210884; 30.0 27.210884 0.0])
@@ -242,3 +249,8 @@ function Trimer()
     return SMatrix{3,3,typeof(KG_11),9}([KG_11 KG_12 KG_13; KG_12 KG_22 KG_23; KG_13 KG_23 KG_33])
 end
 ###############################################################################
+
+
+
+
+## I will need a new function here (since Trimer is for the triangular model) 

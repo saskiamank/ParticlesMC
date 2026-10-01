@@ -77,22 +77,30 @@ Arguments
 Returns
 - `Molecules` instance with neighbour list built and `energy[1]` set.
 """
+# --------------------
 function System(position, species, molecule, density::T, temperature::T, model_matrix, bonds; masses=nothing, molecule_species=nothing, list_type=EmptyList, list_parameters=nothing) where {T<:AbstractFloat}
-    @assert length(position) == length(species)
+    @assert length(position) == length(species)                                         # both must have the length of the number of particles, such that each particle 
+                                                                                        # has a position and a species
     N = length(position)
-    mass = isnothing(masses) ? ones(T, N) : T.(collect(masses))
+    mass = isnothing(masses) ? ones(T, N) : T.(collect(masses))                         # if no masses are specified each atom gets a mass of 1 (can we do this ???)
     length(mass) == N || throw(ArgumentError("one mass per particle is required"))
     all(m -> isfinite(m) && m > zero(T), mass) ||
         throw(ArgumentError("particle masses must be finite and strictly positive"))
     Φ = Vector{Vector{SVector{3,T}}}()   # empty, filled by ComputeRotation
-    Nmol = length(unique(molecule))
-    start_mol, length_mol = get_first_and_counts(molecule)
-    molecule_species = something(molecule_species, ones(Int, N))
+    Nmol = length(unique(molecule))                                                     # number of molecules
+    start_mol, length_mol = get_first_and_counts(molecule)                              # start_mol contains the indices where a new molecule starts, 
+                                                                                        # length_mol contains the corresponding number of entries 
+                                                                                        # belonging to one molecule 
+    molecule_species = something(molecule_species, ones(Int, N))                        # is molecules_species provisional to include different geometries of molecules in one system (???)
+                                                                                        # something() returns first argument that is not nothing
     d = length(Array(position)[1])
-    box = @SVector fill(T((N / density)^(1 / d)), d)
+    box = @SVector fill(T((N / density)^(1 / d)), d)                                    # what does the T do here, type ? (???), otherwise stores just a d dimensional vector 
+                                                                                        # containing the length of the box in each dimension, cube 
     energy = zeros(T, 1)
     maxcut = maximum([model.rcut for model in model_matrix])
-    neighbour_list = list_type(box, maxcut, N; list_parameters=list_parameters)
+    neighbour_list = list_type(box, maxcut, N; list_parameters=list_parameters)         # list_type is replaced by the type of the neighbour list, which is passed as an argument to System, 
+                                                                                        # which then calls the constructor of the neighbour list type
+
     system = Molecules(position, mass, Φ, species, molecule, molecule_species, start_mol, length_mol, density, temperature, energy, model_matrix, d, N, Nmol, box, neighbour_list, bonds)
     build_neighbour_list!(system)
     local_energy = [compute_energy_particle(system, i, neighbour_list) for i in eachindex(position)]
@@ -103,6 +111,10 @@ function System(position, species, molecule, density::T, temperature::T, model_m
     system.energy[1] = energy
     return system
 end
+# NO CHANGE, I think...
+
+
+
 
 """
 Return the start and end indices of molecule `i` in `system`.
@@ -146,6 +158,10 @@ function get_first_and_counts(vec::Vector{Int})
 
     return firsts, counts
 end
+# NO CHANGE
+
+
+
 
 """
 Check and compute the pair energy between particles `i` and `j`.
@@ -164,11 +180,17 @@ function check_compute_energy_ij(system::Molecules, i, j, position_i, bonds_i)
     model_ij = get_model(system, i, j)
     return compute_energy_ij(system, position_i, position_j, model_ij, isbonded)
 end
+# NO CHANGE 
+
+
+
+
 """
 `check_nonbonded_compute_energy_ij` returns zero if `i == j` or if `j` is bonded to `i`.
 Otherwise it computes the non-bonded pair energy by dispatching to
 `compute_energy_ij(..., NonBonded())`.
 """
+# Why do we need this function? It seems redundant with check_compute_energy_ij, used for atomistic case (???) 
 function check_nonbonded_compute_energy_ij(system::Molecules, i, j, position_i, bonds_i)
     # Early return using && for short-circuit evaluation
     i == j && return zero(system.density)
@@ -178,6 +200,10 @@ function check_nonbonded_compute_energy_ij(system::Molecules, i, j, position_i, 
     model_ij = get_model(system, i, j)
     return compute_energy_ij(system, position_i, position_j, model_ij, NonBonded())
 end
+# NO CHANGE
+
+
+
 
 function compute_energy_bonded_i(system::Molecules, i, position_i, bonds_i)
     energy_bonded_i = zero(typeof(system.density))

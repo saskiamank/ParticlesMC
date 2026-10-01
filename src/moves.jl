@@ -47,6 +47,10 @@ function update_position!(system::Particles, action::Displacement)
     @inbounds system.position[action.i] = system.position[action.i] + action.δ
 end
 
+# @inbounds tells the compiler to skip bounds checks within the given block 
+# bounds checking is any method of detecting whether a varibale is within come bounds before it is used 
+# usually used to ensure ..., that a variable being used an an array index is within the bounds of the array 
+
 """
 Perform a displacement action: compute pre-move energy, apply the displacement,
 update the neighbour list if the particle changed cell, then compute post-move

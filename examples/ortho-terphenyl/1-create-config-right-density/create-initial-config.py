@@ -8,14 +8,14 @@ import itertools
 
 import numpy as np
 
-M = 1000
-N = M * 3
+M = 1000                                                                        # Number of Molecules 
+N = M * 3                                                                       # Number of Particles
 number_density = 0.2  # This is per particle, not per molecule
 # rho = N/V
 V = N / number_density
 L = V ** (1 / 3)
 
-sigmas = [0.9, 1, 1.1]
+sigmas = [0.9, 1, 1.1]                                                          # Potential? 
 
 
 def main(output_file_name: str) -> None:
@@ -30,7 +30,7 @@ def main(output_file_name: str) -> None:
     cos_alpha = np.cos(60 / 180)
     sin_alpha = np.sin(60 / 180)
 
-    f = open(output_file_name, "w")
+    f = open(output_file_name, "w")   
 
     f.write(f"{N}\n")
     f.write(f"columns:molecule,species,position cell:{L},{L},{L}\n")
@@ -43,7 +43,7 @@ def main(output_file_name: str) -> None:
     ):
         r_a = (i * dxdydz, j * dxdydz, k * dxdydz)
         r_b = (i * dxdydz, j * dxdydz + r_ab, k * dxdydz)
-        r_c = (i * dxdydz + r_ac * cos_alpha, j * dxdydz + r_ac * sin_alpha, k * dxdydz)
+        r_c = (i * dxdydz + r_ac * cos_alpha, j * dxdydz + r_ac * sin_alpha, k * dxdydz)  # put all molecules in x,y plane, triangle with 60° each angle
 
         f.write(f"{counter} 1 {r_a[0]} {r_a[1]} {r_a[2]}\n")
         f.write(f"{counter} 2 {r_b[0]} {r_b[1]} {r_b[2]}\n")

@@ -157,7 +157,10 @@ ParticlesMC implemented in Comonicon.
 
 - `params`: Path to the TOML parameter file.
 """
-@main function particlesmc(params::String)
+@main function particlesmc(params::String)     # here comonicon used, to my understanding: creates a function that can be called from the terminal, 
+    # where positional arguments are mapped to julias function arguments, and options arguments are mapped as julia keyword arguments, 
+    # flags like options without any value are mapped to a special type of keyword argument of type bool with default value false 
+    
     if !isfile(params)
         error("Parameter file '$params' does not exist in the current path.")
     end
@@ -168,7 +171,7 @@ ParticlesMC implemented in Comonicon.
     temperature = system["temperature"]
     density = system["density"]
     config = system["config"]
-    model = get(system, "model", nothing)
+    model = get(system, "model", nothing)  # assign the data stored in model in under system in model or if there is no model specified in system, just assign 'nothing' to model
     if model === nothing
         model = params["model"]
     end  # optional field
@@ -229,7 +232,7 @@ ParticlesMC implemented in Comonicon.
 
         # Create action object
         if action == "Displacement"
-            action_obj = Displacement(0, zero(chains[1].box), 0.0)
+            action_obj = (0, zero(chains[1].box), 0.0)
             if "sigma" in keys(parameters)
                 param_obj = ComponentArray(σ=parameters["sigma"])
             else
