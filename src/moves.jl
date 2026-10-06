@@ -351,4 +351,216 @@ function Arianna.sample_action!(action::MoleculeFlip, ::DoubleUniform, parameter
     action.i, action.j = i, j
 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ###############################################################################
+# Adding moves for the square geometry 
+
+# Adding the Flip of the square which involves two atoms only 
+# flip around the diagonals 
+
+"""
+MoleculeFlip2 - action representing swapping species between two sites within the same molecule around the diagonals of a square.
+
+Fields
+- `i::Int`, `j::Int`: particle indices inside the same molecule to be swapped.
+- `δe::F`: energy change due to the swap.
+"""
+mutable struct MoleculeFlip2{F<:AbstractFloat} <: Action
+    i::Int
+    j::Int
+    δe::F
+end
+
+"""
+Perform a `MoleculeFlip2` action by swapping species between two sites within a square molecule across the diagonal.
+Returns the pair energy before and after the swap `(e₁, e₂)` and stores `δe`.
+"""
+function perform_action!(system::Particles, action::MoleculeFlip2)
+    i, j = action.i, action.j
+    spi, spj = system.species[i], system.species[j]
+    e₁, e₂ = swap_particle_species!(system, spi, i, spj, j)
+    action.δe = e₂ - e₁
+    return e₁, e₂
+end
+
+"""
+Invert a `MoleculeFlip2` action by swapping stored indices.
+"""
+function Arianna.invert_action!(action::MoleculeFlip2, ::Molecules)
+    action.i, action.j = action.j, action.i
+end
+
+"""
+Revert a `MoleculeFlip2` action by swapping the species back and restoring energy.
+"""
+function Arianna.revert_action!(system::Particles, action::MoleculeFlip2)
+    i, j = action.i, action.j
+    spi, spj = get_species(system, i), get_species(system, j)
+    system.species[j], system.species[i] = spi, spj
+    system.energy[1] -= action.δe
+end
+
+"""
+Reward function for `MoleculeFlip2` (currently constant).
+"""
+function reward(::MoleculeFlip2, system::Particles)
+    return one(typeof(system.temperature))
+end
+
+
+
+"""
+Log proposal density for `MoleculeFlip2` under `SingleUniform` sampling (uniform between 2 choices).
+"""
+function Arianna.log_proposal_density(action::MoleculeFlip2, ::DoubleUniform, parameters, system::Particles)
+    return -log(2)
+end
+
+"""
+Sample a `MoleculeFlip2` action by selecting a molecule uniformly and picking two distinct
+sites in that molecule with different species.
+"""
+function Arianna.sample_action!(action::MoleculeFlip2, ::DoubleUniform, parameters, system::Particles, rng)
+    molecule_i = rand(rng, DiscreteUniform(1, system.Nmol))
+    start_mol, end_mol = get_start_end_mol(system, molecule_i)
+    i = rand(rng, start_mol:end_mol)
+    MolIndices = collect(start_mol:end_mol)
+    others = MolIndices[MolIndices .!= i]
+    j = only(filter(k -> !(k in system.bonds[i]), others))
+    action.i, action.j = i, j
+end
+
+###############################################################################
+
+# Adding the Flip of the square which involves two pairs of atoms
+# flip around the perpendicular bisector of a side
+
+"""
+MoleculeFlip4 - action representing swapping species between two pairs of sites within the same molecule.
+
+Fields
+- `i::Int`, `j::Int`,`k::Int`, `l::Int`: particle indices inside the same molecule to be swapped.
+- `δe::F`: energy change due to the swap.
+"""
+mutable struct MoleculeFlip4{F<:AbstractFloat} <: Action
+    i::Int
+    j::Int
+    k::Int
+    l::Int
+    δe::F
+end
+
+
+"""
+Swap the species identifiers of particles `i` and `j` and `k` and `l` and return the total
+pre- and post-swap energies for those four particles.
+
+`swap_particle_species!(system, spi, i, spj, j, spk, k, spj, j)` computes energies before the
+swap of particle i with j and particle k with l, performs the species exchange, then computes energies after and returns
+`(E_before, E_after)` for the pair of pairs.
+"""
+function swap_particle_species!(system::Particles, spi, i, spj, j, spk, k, spl, l)
+    e₁ᵢ = compute_energy_particle(system, i, system.neighbour_list)
+    e₁ⱼ = compute_energy_particle(system, j, system.neighbour_list)
+    e₁ₖ = compute_energy_particle(system, k, system.neighbour_list)
+    e₁ₗ = compute_energy_particle(system, l, system.neighbour_list)
+
+    system.species[i] = spj
+    system.species[j] = spi
+    system.species[k] = spl
+    system.species[l] = spk
+
+    e₂ᵢ = compute_energy_particle(system, i, system.neighbour_list)
+    e₂ⱼ = compute_energy_particle(system, j, system.neighbour_list)
+    e₂ₖ = compute_energy_particle(system, k, system.neighbour_list)
+    e₂ₗ = compute_energy_particle(system, l, system.neighbour_list)
+    return e₁ᵢ + e₁ⱼ + e₁ₖ + e₁ₗ, e₂ᵢ + e₂ⱼ + e₂ₖ + e₂ₗ
+end
+
+
+
+"""
+Perform a `MoleculeFlip4` action by swapping two pairs of species between two pairs of sites within a molecule.
+Returns the pair energies before and after the swap `(e₁, e₂)` and stores `δe`.
+"""
+function perform_action!(system::Particles, action::MoleculeFlip4)
+    i, j, k, l = action.i, action.j, action.k, action.l
+    spi, spj, spk, spl = system.species[i], system.species[j], system.species[k], system.species[l]
+    e₁, e₂ = swap_particle_species!(system, spi, i, spj, j, spk, k, spl, l)
+    action.δe = e₂ - e₁
+    return e₁, e₂
+end
+
+"""
+Invert a `MoleculeFlip4` action by swapping stored indices.
+"""
+function Arianna.invert_action!(action::MoleculeFlip4, ::Molecules)
+    action.i, action.j = action.j, action.i
+    action.k, action.l = action.l, action.k
+end
+
+"""
+Revert a `MoleculeFlip4` action by swapping the species back and restoring energy.
+"""
+function Arianna.revert_action!(system::Particles, action::MoleculeFlip4)
+    i, j, k, l = action.i, action.j, action.k, action.l
+    spi, spj, spk, spl = get_species(system, i), get_species(system, j), get_species(system, k), get_species(system, l)
+    system.species[j], system.species[i] = spi, spj
+    system.species[l], system.species[k] = spk, spl
+    system.energy[1] -= action.δe
+end
+
+"""
+Reward function for `MoleculeFlip4` (currently constant).
+"""
+function reward(::MoleculeFlip4, system::Particles)
+    return one(typeof(system.temperature))
+end
+
+"""
+Log proposal density for `MoleculeFlip` under `DoubleUniform` sampling (uniform between 2 choices).
+"""
+function Arianna.log_proposal_density(action::MoleculeFlip, ::DoubleUniform, parameters, system::Particles)
+    return -log(2)
+end
+
+"""
+Sample a `MoleculeFlip` action by selecting a molecule uniformly and picking two distinct
+pairs of sites in that molecule with different species.
+"""
+function Arianna.sample_action!(action::MoleculeFlip4, ::DoubleUniform, parameters, system::Particles, rng)
+    molecule_i = rand(rng, DiscreteUniform(1, system.Nmol))  # choose a molecule 
+    start_mol, end_mol = get_start_end_mol(system, molecule_i) # get all indices of the atoms in the molecule 
+    i = rand(rng, start_mol:end_mol)                        # choose one atom 
+    bonds_i = system.bonds[i]
+    @assert length(bonds_i) == 2
+
+    j = rand(rng, bonds_i)                # choose one of the bonded atoms to be swapped with 
+    k = only(bonds_i[bonds_i .!= j])      # find other bonded atom 
+
+    bonds_k = system.bonds[k]
+    @assert length(bonds_k) == 2
+
+    l = only(bonds_k[bonds_k .!= i])      # find last atom in the molecule 
+    action.i, action.j, action.k, action.l = i, j, k, l
+end
