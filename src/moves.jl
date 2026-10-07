@@ -231,6 +231,7 @@ Log proposal density for `DiscreteSwap` under `DoubleUniform` sampling.
 function Arianna.log_proposal_density(action::DiscreteSwap, ::DoubleUniform, parameters, system::Particles)
     return -log(action.particles_per_species[1] * action.particles_per_species[2])
 end
+# log(probability to choose exactly one pair of a particle of species 1 and a particle of species 2)
 
 """
 Sample indices for `DiscreteSwap` uniformly from the two species lists.
