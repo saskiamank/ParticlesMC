@@ -139,7 +139,7 @@ export NeighbourList, LinkedList, CellList, EmptyList, VerletList
 export Atoms, Molecules
 export OrientationDefinition, CenterToAtomOrientation, PlaneNormalOrientation
 export orientation, molecule_center_of_mass
-export Displacement, DiscreteSwap, MoleculeFlip
+export Displacement, DiscreteSwap, MoleculeFlip, MoleculeFlip2, MoleculeFlip4
 export fold_back, System
 export SimpleGaussian, DoubleUniform, EnergyBias
 export sample_action!, log_proposal_density, reward, invert_action!, delta_log_target_density
@@ -248,6 +248,16 @@ ParticlesMC implemented in Comonicon.
             else
                 error("Unsupported policy: $policy for action: $action")
             end
+#####################################################################################
+        elseif action == "MoleculeFlip2"
+            action_obj = MoleculeFlip2(0, 0, 0.0)
+            param_obj = Vector{Float64}()
+            if policy == "DoubleUniform"
+                policy_obj = DoubleUniform()
+            else
+                error("Unsupported policy: $policy for action: $action")
+            end
+######################################################################################
         elseif action == "DiscreteSwap"
             if "species" in keys(parameters)
                 species = parameters["species"]

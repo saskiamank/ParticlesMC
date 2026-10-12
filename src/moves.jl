@@ -541,7 +541,7 @@ end
 """
 Log proposal density for `MoleculeFlip` under `DoubleUniform` sampling (uniform between 2 choices).
 """
-function Arianna.log_proposal_density(action::MoleculeFlip, ::DoubleUniform, parameters, system::Particles)
+function Arianna.log_proposal_density(action::MoleculeFlip4, ::DoubleUniform, parameters, system::Particles)
     return -log(2)
 end
 
