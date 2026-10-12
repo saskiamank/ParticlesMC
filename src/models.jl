@@ -257,23 +257,26 @@ end
 # This function so far is only used in the test function 
 
 
-function Square(sigmas::SVector{Flaot64, 4}) 
-    @inline function sigmaij(simgai::Float64, sigmaj::Float64)
+function Square() 
+
+    sigmas = [1.0, 0.95, 0.9, 0.85]
+
+    @inline function sigmaij(sigmai::Float64, sigmaj::Float64)
         return (sigmai +sigmaj)/2
     end 
 
-    @inline function k_sigma(sigmai::Float, sigmaj::Float64, epsilonij::Float64=1.)
-        sigmaij = sigmaij(sigmai, sigmaj)
-        return 30*epsilonij/(sigmaij^2)
+    @inline function k_sigma(sigmai::Float64, sigmaj::Float64, epsilonij::Float64=1.)
+        sigmaij_here = sigmaij(sigmai, sigmaj)
+        return 30*epsilonij/(sigmaij_here^2)
     end 
 
     @inline function r0_sigma(sigmai::Float64, sigmaj::Float64)
-        sigmaij = sigmaij(sigmai, sigmaj)
-        return 1.5*sigmaij
+        sigmaij_here = sigmaij(sigmai, sigmaj)
+        return 1.5*sigmaij_here
     end 
     
 
-    ϵ = SMatrix{4,4,Float64}([1.0 1.0 1.0; 1.0 1.0 1.0; 1.0 1.0 1.0; 1.0 1.0 1.0])
+    ϵ = SMatrix{4,4,Float64}([1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0])
     σ = SMatrix{4,4,Float64}([sigmaij(sigmas[i], sigmas[j]) for i in 1:4, j in 1:4])
     k = SMatrix{4,4,Float64}([k_sigma(sigmas[i], sigmas[j]) for i in 1:4, j in 1:4])
     r0 = SMatrix{4,4,Float64}([r0_sigma(sigmas[i], sigmas[j]) for i in 1:4, j in 1:4])
@@ -289,6 +292,6 @@ function Square(sigmas::SVector{Flaot64, 4})
     KG_33 = GeneralKG(ϵ[3, 3], σ[3, 3], k[3, 3], r0[3, 3])
     KG_34 = GeneralKG(ϵ[3, 4], σ[3, 4], k[3, 4], r0[3, 4])
     KG_44 = GeneralKG(ϵ[4, 4], σ[4, 4], k[4, 4], r0[4, 4])
-    return SMatrix{4,4,typeof(KG_11),12}([KG_11 KG_12 KG_13 KG_14; KG_12 KG_22 KG_23 KG_24; KG_13 KG_23 KG_33 KG_34; KG_14 KG_24 KG_34 KG_44])
+    return SMatrix{4,4,typeof(KG_11),16}([KG_11 KG_12 KG_13 KG_14; KG_12 KG_22 KG_23 KG_24; KG_13 KG_23 KG_33 KG_34; KG_14 KG_24 KG_34 KG_44])
 end
 
