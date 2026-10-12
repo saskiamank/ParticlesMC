@@ -1,5 +1,7 @@
 using LinearAlgebra, StaticArrays
 
+
+#region Abstract types
 """
     abstract type Model end
 
@@ -21,6 +23,9 @@ abstract type DiscreteModel <: Model end
 An abstract base type representing a general interaction model with a continuous size polidispersity.
 """
 abstract type ContinuousModel <: Model end
+#endregion 
+
+
 
 ## POTENTIALS
 harmonic_spheres(r2, ϵ, σ2) = ϵ * (1 - r2 / σ2)
@@ -30,12 +35,13 @@ inverse_power(r2, ϵ, σ2, ndiv2) = ϵ * (σ2 / r2)^(ndiv2)
 @inline function lennard_jones(r2::T, ϵ4::T, σ2::T) where T<:AbstractFloat
     x = σ2 * inv(r2)
     x3 = x * x * x  # (σ²/r²)^3
-    return ϵ4 * (x3 * x3 - x3)
+    return ϵ4 * (x3 * x3 - x3)  # ϵ4 * ( (σ²/r²)^6  - (σ²/r²)^3 ) 
 end
 
 fene(r2, kr02, r02) = kr02 * log(1 - r2 * inv(r02))
 
 ###############################################################################
+#region SoftSpheres
 """
     struct SoftSpheres{T<:AbstractArray} <: DiscreteModel
 
@@ -83,6 +89,7 @@ function BHHP()
     return [LJ_11 LJ_12; LJ_21 LJ_22]
 end
 
+#endregion
 ###############################################################################
 """
     struct LennardJones{T<:AbstractArray} <: DiscreteModel
@@ -228,7 +235,7 @@ end
 cutoff(model::DiscreteModel) = model.rcut
 cutoff2(model::DiscreteModel) = model.rcut2
 
-function Trimer()
+function Trimer() 
     ϵ = SMatrix{3,3,Float64}([1.0 1.0 1.0; 1.0 1.0 1.0; 1.0 1.0 1.0])
     σ = SMatrix{3,3,Float64}([0.9 0.95 1.0; 0.95 1.0 1.05; 1.0 1.05 1.1])
     k = SMatrix{3,3,Float64}([0.0 33.241 30.0; 33.241 0.0 27.210884; 30.0 27.210884 0.0])
@@ -242,3 +249,46 @@ function Trimer()
     return SMatrix{3,3,typeof(KG_11),9}([KG_11 KG_12 KG_13; KG_12 KG_22 KG_23; KG_13 KG_23 KG_33])
 end
 ###############################################################################
+
+
+
+
+## I will need a new function here (since Trimer is for the triangular model) 
+# This function so far is only used in the test function 
+
+
+function Square(sigmas::SVector{Flaot64, 4}) 
+    @inline function sigmaij(simgai::Float64, sigmaj::Float64)
+        return (sigmai +sigmaj)/2
+    end 
+
+    @inline function k_sigma(sigmai::Float, sigmaj::Float64, epsilonij::Float64=1.)
+        sigmaij = sigmaij(sigmai, sigmaj)
+        return 30*epsilonij/(sigmaij^2)
+    end 
+
+    @inline function r0_sigma(sigmai::Float64, sigmaj::Float64)
+        sigmaij = sigmaij(sigmai, sigmaj)
+        return 1.5*sigmaij
+    end 
+    
+
+    ϵ = SMatrix{4,4,Float64}([1.0 1.0 1.0; 1.0 1.0 1.0; 1.0 1.0 1.0; 1.0 1.0 1.0])
+    σ = SMatrix{4,4,Float64}([sigmaij(sigmas[i], sigmas[j]) for i in 1:4, j in 1:4])
+    k = SMatrix{4,4,Float64}([k_sigma(sigmas[i], sigmas[j]) for i in 1:4, j in 1:4])
+    r0 = SMatrix{4,4,Float64}([r0_sigma(sigmas[i], sigmas[j]) for i in 1:4, j in 1:4])
+
+
+    KG_11 = GeneralKG(ϵ[1, 1], σ[1, 1], k[1, 1], r0[1, 1])
+    KG_12 = GeneralKG(ϵ[1, 2], σ[1, 2], k[1, 2], r0[1, 2])
+    KG_13 = GeneralKG(ϵ[1, 3], σ[1, 3], k[1, 3], r0[1, 3])
+    KG_14 = GeneralKG(ϵ[1, 4], σ[1, 4], k[1, 4], r0[1, 4])
+    KG_22 = GeneralKG(ϵ[2, 2], σ[2, 2], k[2, 2], r0[2, 2])
+    KG_23 = GeneralKG(ϵ[2, 3], σ[2, 3], k[2, 3], r0[2, 3])
+    KG_24 = GeneralKG(ϵ[2, 4], σ[2, 4], k[2, 4], r0[2, 4])
+    KG_33 = GeneralKG(ϵ[3, 3], σ[3, 3], k[3, 3], r0[3, 3])
+    KG_34 = GeneralKG(ϵ[3, 4], σ[3, 4], k[3, 4], r0[3, 4])
+    KG_44 = GeneralKG(ϵ[4, 4], σ[4, 4], k[4, 4], r0[4, 4])
+    return SMatrix{4,4,typeof(KG_11),12}([KG_11 KG_12 KG_13 KG_14; KG_12 KG_22 KG_23 KG_24; KG_13 KG_23 KG_33 KG_34; KG_14 KG_24 KG_34 KG_44])
+end
+
