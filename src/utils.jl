@@ -9,7 +9,7 @@ function Arianna.delta_log_target_density(e1, e2, system::Particles)
     return -(e2 - e1) ./ system.temperature
 end
 
-fold_back(x, box) = x .- fld.(x, box) .* box
+fold_back(x, box) = x .- fld.(x, box) .* box    # fld.(x, box) calculates the largest integer less or equal to (x[i]/box[i]), lietrally just folds back all the positions into the box
 
 
 function vector_1D(c1, c2, side_length)
