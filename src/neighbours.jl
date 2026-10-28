@@ -235,7 +235,7 @@ end
 """
 function LinkedList(box, rcut, N; list_parameters=nothing)
     cell = box ./ fld.(box, rcut)
-    ncells = ntuple(a -> Int(box[a] / cell[a]), length(box))
+    ncells = ntuple(a -> round(Int, box[a] / cell[a]), length(box))
     head = -ones(Int, prod(ncells))
     list = zeros(Int, N)
     cs = zeros(Int, N)
