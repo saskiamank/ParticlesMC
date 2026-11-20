@@ -134,7 +134,7 @@ end
 
 export energy
 #export nearest_image_distance
-export Model, GeneralKG, JBB, BHHP, SoftSpheres, KobAndersen, Trimer
+export Model, GeneralKG, JBB, BHHP, SoftSpheres, KobAndersen, Trimer, Square
 export NeighbourList, LinkedList, CellList, EmptyList, VerletList
 export Atoms, Molecules
 export OrientationDefinition, CenterToAtomOrientation, PlaneNormalOrientation
