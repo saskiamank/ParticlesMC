@@ -242,3 +242,41 @@ function Trimer()
     return SMatrix{3,3,typeof(KG_11),9}([KG_11 KG_12 KG_13; KG_12 KG_22 KG_23; KG_13 KG_23 KG_33])
 end
 ###############################################################################
+
+function Square() 
+
+    sigmas = [1.0, 0.95, 0.9, 0.85]
+
+    @inline function sigmaij(sigmai::Float64, sigmaj::Float64)
+        return (sigmai +sigmaj)/2
+    end 
+
+    @inline function k_sigma(sigmai::Float64, sigmaj::Float64, epsilonij::Float64=1.)
+        sigmaij_here = sigmaij(sigmai, sigmaj)
+        return 30*epsilonij/(sigmaij_here^2)
+    end 
+
+    @inline function r0_sigma(sigmai::Float64, sigmaj::Float64)
+        sigmaij_here = sigmaij(sigmai, sigmaj)
+        return 1.5*sigmaij_here
+    end 
+    
+
+    ϵ = SMatrix{4,4,Float64}([1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0])
+    σ = SMatrix{4,4,Float64}([sigmaij(sigmas[i], sigmas[j]) for i in 1:4, j in 1:4])
+    k = SMatrix{4,4,Float64}([k_sigma(sigmas[i], sigmas[j]) for i in 1:4, j in 1:4])
+    r0 = SMatrix{4,4,Float64}([r0_sigma(sigmas[i], sigmas[j]) for i in 1:4, j in 1:4])
+
+
+    KG_11 = GeneralKG(ϵ[1, 1], σ[1, 1], k[1, 1], r0[1, 1])
+    KG_12 = GeneralKG(ϵ[1, 2], σ[1, 2], k[1, 2], r0[1, 2])
+    KG_13 = GeneralKG(ϵ[1, 3], σ[1, 3], k[1, 3], r0[1, 3])
+    KG_14 = GeneralKG(ϵ[1, 4], σ[1, 4], k[1, 4], r0[1, 4])
+    KG_22 = GeneralKG(ϵ[2, 2], σ[2, 2], k[2, 2], r0[2, 2])
+    KG_23 = GeneralKG(ϵ[2, 3], σ[2, 3], k[2, 3], r0[2, 3])
+    KG_24 = GeneralKG(ϵ[2, 4], σ[2, 4], k[2, 4], r0[2, 4])
+    KG_33 = GeneralKG(ϵ[3, 3], σ[3, 3], k[3, 3], r0[3, 3])
+    KG_34 = GeneralKG(ϵ[3, 4], σ[3, 4], k[3, 4], r0[3, 4])
+    KG_44 = GeneralKG(ϵ[4, 4], σ[4, 4], k[4, 4], r0[4, 4])
+    return SMatrix{4,4,typeof(KG_11),16}([KG_11 KG_12 KG_13 KG_14; KG_12 KG_22 KG_23 KG_24; KG_13 KG_23 KG_33 KG_34; KG_14 KG_24 KG_34 KG_44])
+end
